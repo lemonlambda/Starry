@@ -1,9 +1,10 @@
 [package]
 name = "starry-ecs"
-version = "0.1.0"
+version = "0.1.2"
 edition = "2021"
 license = "MIT"
 description = "A crude ECS system"
+repository = "https://github.com/lemonjamesd/starry"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
