@@ -10,3 +10,4 @@ repository = "https://github.com/lemonjamesd/starry"
 
 [dependencies]
 dyn-clone = "1.0.14"
+parking_lot = "0.12.1"

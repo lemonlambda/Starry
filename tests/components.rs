@@ -1,4 +1,4 @@
-use starry::{component::Component, World};
+use starry_ecs::{component::Component, World};
 
 use std::io::{stdout, Write};
 

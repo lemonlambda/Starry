@@ -1,5 +1,5 @@
-use starry::World;
-use starry::resources::Resource;
+use starry_ecs::World;
+use starry_ecs::resources::Resource;
 
 pub struct TestResource {
     x: i32
@@ -8,9 +8,9 @@ pub struct TestResource {
 impl Resource for TestResource {}
 
 pub fn test_resource(world: &World) {
-    let mut resource = world.get_resource::<TestResource>().unwrap();
+    let mut resource = world.get_resource_read::<TestResource>().unwrap();
     println!("{}", resource.x);
-    resource.x += 10;
+    // resource.x += 10;
 }
 
 #[test]

@@ -1,13 +1,18 @@
 use component::Component;
 use resources::Resource;
+use thread_manager::ThreadManager;
 
 pub mod component;
 pub mod resources;
 pub mod systems;
+pub mod thread_manager;
 
-use std::any::{TypeId, Any};
+use std::mem;
+use std::any::{TypeId, Any, type_name};
 use std::collections::HashMap;
-use std::cell::{RefCell, RefMut};
+use std::sync::Arc;
+
+use parking_lot::{RwLock, RwLockReadGuard, MappedRwLockReadGuard};
 
 #[derive(Debug)]
 pub enum StarryError {
@@ -18,9 +23,11 @@ pub enum StarryError {
 pub type SystemType = fn(world: &World);
 
 pub struct World {
-    pub components: Vec<(RefCell<Box<dyn Component>>, TypeId)>,
+    pub components: Vec<(Arc<RwLock<Box<dyn Component>>>, TypeId)>,
     pub systems: Vec<SystemType>,
-    pub resources: HashMap<TypeId, RefCell<Box<dyn Resource>>>
+    pub starting_systems: Vec<SystemType>,
+    pub resources: HashMap<TypeId, Arc<RwLock<Box<dyn Resource>>>>,
+    pub thread_manager: ThreadManager
 }
 
 impl World {
@@ -28,12 +35,14 @@ impl World {
         Self {
             components: vec![],
             systems: vec![],
-            resources: HashMap::new()
+            starting_systems: vec![],
+            resources: HashMap::new(),
+            thread_manager: ThreadManager::new(),
         }
     }
 
     pub fn add_component<T: Component + 'static>(&mut self, component: T) -> &mut Self {
-        self.components.push((RefCell::new(Box::new(component)), TypeId::of::<T>()));
+        self.components.push((Arc::new(RwLock::new(Box::new(component))), TypeId::of::<T>()));
         self
     }
 
@@ -42,38 +51,41 @@ impl World {
         self
     }
 
-    pub fn add_resource<T: Resource + 'static>(&mut self, resource: T) -> &mut Self {
-        self.resources.entry(TypeId::of::<T>()).or_insert(RefCell::new(Box::new(resource)));
+    pub fn add_startup_system(&mut self, system: SystemType) -> &mut Self {
+        self.starting_systems.push(system);
         self
     }
 
-    pub fn get_resource<T: Resource + 'static>(&self) -> Result<RefMut<T>, StarryError> {
-        let name = TypeId::of::<T>();
-        match self.resources.get(&name) {
-            Some(resource) => {
-                Ok(RefMut::map(resource.borrow_mut(), |thing: &mut Box<dyn Resource>| {
-                    let thing: *mut T = &mut **thing as *mut dyn Resource as *mut T;
-                    unsafe { &mut *thing }
-                }))
-            },
-            None => Err(StarryError::ResourceNotFound)
-        }
+    pub fn add_resource<T: Resource + 'static>(&mut self, resource: T) -> &mut Self {
+        self.resources.entry(TypeId::of::<T>()).or_insert(Arc::new(RwLock::new(Box::new(resource))));
+        self
     }
 
-    pub fn get_components<T: Component + 'static>(&self) -> Result<Vec<RefMut<T>>, StarryError> {
+    pub fn get_resource_read<T: Resource + 'static>(&self) -> Result<MappedRwLockReadGuard<T>, StarryError> {
         let name = TypeId::of::<T>();
-        let comps = self.components.iter().filter(|(_, t)| t == &name).map(|(v, _)| v.borrow_mut()).collect::<Vec<RefMut<Box<dyn Component>>>>();
+        let cloned = self.resources.get(&name).expect(format!("{} Resource doesn't exist", type_name::<T>()).as_str()).clone();
+        Ok(RwLockReadGuard::map(cloned.read(), |r| {
+            unsafe { &*(&**r as *const dyn Resource as *const T) }
+        }))
+    }
+
+    pub fn get_components<T: Component + 'static>(&self) -> Result<Vec<Arc<RwLock<T>>>, StarryError> {
+        let name = TypeId::of::<T>();
+        let comps = self.components.iter().filter(|(_, t)| t == &name).map(|(v, _)| v.clone()).collect::<Vec<Arc<RwLock<Box<dyn Component>>>>>();
         if comps.len() == 0 {
             return Err(StarryError::ComponentNotFound);
         }
-        let concreted = comps.into_iter().map(|x| RefMut::map(x, |thing: &mut Box<dyn Component>| {
-            let thing: *mut T = &mut **thing as *mut dyn Component as *mut T;
-            unsafe { &mut *thing }
-        })).collect::<Vec<_>>();
-        Ok(concreted)
+
+        // TODO: Implement the rest of this
+        todo!();
+        
+        // Ok(concreted)
     }
 
     pub fn run(&mut self) {
+        for system in &self.starting_systems {
+            system(&self);
+        }
         loop {
             for system in &self.systems {
                 system(&self);
