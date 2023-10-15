@@ -1,3 +1,5 @@
+ #![deny(rust_2018_idioms)]
+
 use component::Component;
 use resources::Resource;
 use thread_manager::ThreadManager;
