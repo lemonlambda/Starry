@@ -72,7 +72,7 @@ impl World {
         self
     }
 
-    pub fn get_resource_read<T: Resource + 'static>(&self) -> Result<MappedRwLockReadGuard<'_, T>, StarryError> {
+    pub fn try_get_resource<T: Resource + 'static>(&self) -> Result<ResourceReadGuard<'_, T>, StarryError> {
         let name = TypeId::of::<T>();
         let cloned = self.resources.get(&name).expect(format!("{} Resource doesn't exist", type_name::<T>()).as_str());
         Ok(RwLockReadGuard::map(cloned.read(), |r| {
@@ -80,7 +80,7 @@ impl World {
         }))
     }
 
-    pub fn get_resource_write<T: Resource + 'static>(&self) -> Result<MappedRwLockWriteGuard<'_, T>, StarryError> {
+    pub fn try_get_resource_mut<T: Resource + 'static>(&self) -> Result<ResourceWriteGuard<'_, T>, StarryError> {
         let name = TypeId::of::<T>();
         let cloned = self.resources.get(&name).expect(format!("{} Resource doesn't exist", type_name::<T>()).as_str());
         Ok(RwLockWriteGuard::map(cloned.write(), |r| {
@@ -94,7 +94,7 @@ impl World {
         }
     }
 
-    pub fn get_components<T: Component + 'static>(&self) -> Result<Vec<Arc<RwLock<T>>>, StarryError> {
+    pub fn get_components_read<T: Component + 'static>(&self) -> Result<Vec<ComponentReadGuard<'_, T>>, StarryError> {
         let name = TypeId::of::<T>();
         let comps = self.components.iter().filter(|(_, t)| t == &name).map(|(v, _)| v.clone()).collect::<Vec<Arc<RwLock<Box<dyn Component>>>>>();
         if comps.len() == 0 {
