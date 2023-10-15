@@ -16,11 +16,14 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use parking_lot::{RwLock, RwLockReadGuard, MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLockWriteGuard};
+use thiserror::Error;
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum StarryError {
-    ComponentNotFound,
-    ResourceNotFound
+    #[error("Component no found of type: `{0}`")]
+    ComponentNotFound(&'static str),
+    #[error("Resource no found of type: `{0}`")]
+    ResourceNotFound(&'static str)
 }
 
 pub type SystemType = fn(world: &World);
