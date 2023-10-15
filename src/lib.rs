@@ -1,4 +1,5 @@
- #![deny(rust_2018_idioms)]
+#![deny(rust_2018_idioms)]
+#![feature(type_name_of_val)]
 
 use component::Component;
 use resources::Resource;
