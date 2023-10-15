@@ -80,12 +80,20 @@ impl World {
         }))
     }
 
+    pub fn get_resource<T: Resource + 'static>(&self) -> ResourceReadGuard<'_, T> {
+        self.try_get_resource::<T>().unwrap()
+    }
+
     pub fn try_get_resource_mut<T: Resource + 'static>(&self) -> Result<ResourceWriteGuard<'_, T>, StarryError> {
         let name = TypeId::of::<T>();
         let cloned = self.resources.get(&name).expect(format!("{} Resource doesn't exist", type_name::<T>()).as_str());
         Ok(RwLockWriteGuard::map(cloned.write(), |r| {
             unsafe { &mut *(&mut **r as *mut dyn Resource as *mut T) }
         }))
+    }
+    
+    pub fn get_resource_mut<T: Resource + 'static>(&self) -> ResourceWriteGuard<'_, T> {
+        self.try_get_resource_mut::<T>().unwrap()
     }
 
     pub fn list_resources(&self) {
