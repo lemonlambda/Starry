@@ -92,10 +92,21 @@ impl World {
         // Ok(concreted)
     }
 
-    pub fn run(&mut self) {
+    pub fn single_step(&mut self) -> &mut Self {
+        for system in &self.systems {
+            system(&self);
+        }
+        self
+    }
+
+    pub fn start(&mut self) -> &mut Self {
         for system in &self.starting_systems {
             system(&self);
         }
+        self
+    }
+
+    pub fn run(&mut self) -> ! {
         loop {
             for system in &self.systems {
                 system(&self);
