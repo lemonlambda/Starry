@@ -74,7 +74,10 @@ impl World {
 
     pub fn try_get_resource<T: Resource + 'static>(&self) -> Result<ResourceReadGuard<'_, T>, StarryError> {
         let name = TypeId::of::<T>();
-        let cloned = self.resources.get(&name).expect(format!("{} Resource doesn't exist", type_name::<T>()).as_str());
+        let cloned = match self.resources.get(&name) {
+            Some(ok) => ok,
+            None => return Err(StarryError::ResourceNotFound(type_name::<T>()))
+        };
         Ok(RwLockReadGuard::map(cloned.read(), |r| {
             unsafe { &*(&**r as *const dyn Resource as *const T) }
         }))
@@ -86,7 +89,10 @@ impl World {
 
     pub fn try_get_resource_mut<T: Resource + 'static>(&self) -> Result<ResourceWriteGuard<'_, T>, StarryError> {
         let name = TypeId::of::<T>();
-        let cloned = self.resources.get(&name).expect(format!("{} Resource doesn't exist", type_name::<T>()).as_str());
+        let cloned = match self.resources.get(&name) {
+            Some(ok) => ok,
+            None => return Err(StarryError::ResourceNotFound(type_name::<T>()))
+        };
         Ok(RwLockWriteGuard::map(cloned.write(), |r| {
             unsafe { &mut *(&mut **r as *mut dyn Resource as *mut T) }
         }))
@@ -106,7 +112,7 @@ impl World {
         let name = TypeId::of::<T>();
         let comps = self.components.iter().filter(|(_, t)| t == &name).map(|(v, _)| v.clone()).collect::<Vec<Arc<RwLock<Box<dyn Component>>>>>();
         if comps.len() == 0 {
-            return Err(StarryError::ComponentNotFound);
+            return Err(StarryError::ComponentNotFound(type_name::<T>()));
         }
 
         // TODO: Implement the rest of this
