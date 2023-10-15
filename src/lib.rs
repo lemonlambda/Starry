@@ -34,10 +34,10 @@ pub type ComponentWriteGuard<'a, T> = MappedRwLockWriteGuard<'a, T>;
 pub type ComponentReadGuard<'a, T> = MappedRwLockReadGuard<'a, T>;
 
 pub struct World {
-    pub components: Vec<(Arc<RwLock<Box<dyn Component>>>, TypeId)>,
+    pub components: Vec<(Arc<RwLock<dyn Component>>, TypeId)>,
     pub systems: Vec<SystemType>,
     pub starting_systems: Vec<SystemType>,
-    pub resources: HashMap<TypeId, Arc<RwLock<Box<dyn Resource>>>>,
+    pub resources: HashMap<TypeId, Arc<RwLock<dyn Resource>>>,
     pub thread_manager: ThreadManager
 }
 
@@ -53,7 +53,7 @@ impl World {
     }
 
     pub fn add_component<T: Component + 'static>(&mut self, component: T) -> &mut Self {
-        self.components.push((Arc::new(RwLock::new(Box::new(component))), TypeId::of::<T>()));
+        self.components.push((Arc::new(RwLock::new(component)), TypeId::of::<T>()));
         self
     }
 
@@ -68,7 +68,7 @@ impl World {
     }
 
     pub fn add_resource<T: Resource + 'static>(&mut self, resource: T) -> &mut Self {
-        self.resources.entry(TypeId::of::<T>()).or_insert(Arc::new(RwLock::new(Box::new(resource))));
+        self.resources.entry(TypeId::of::<T>()).or_insert(Arc::new(RwLock::new(resource)));
         self
     }
 
