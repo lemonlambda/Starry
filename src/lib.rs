@@ -79,6 +79,12 @@ impl World {
         }))
     }
 
+    pub fn list_resources(&self) {
+        for resource in self.resources.iter() {
+            println!("{:#?}", resource);
+        }
+    }
+
     pub fn get_components<T: Component + 'static>(&self) -> Result<Vec<Arc<RwLock<T>>>, StarryError> {
         let name = TypeId::of::<T>();
         let comps = self.components.iter().filter(|(_, t)| t == &name).map(|(v, _)| v.clone()).collect::<Vec<Arc<RwLock<Box<dyn Component>>>>>();
