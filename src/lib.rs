@@ -79,7 +79,7 @@ impl World {
             None => return Err(StarryError::ResourceNotFound(type_name::<T>()))
         };
         Ok(RwLockReadGuard::map(cloned.read(), |r| {
-            unsafe { &*(&**r as *const dyn Resource as *const T) }
+            unsafe { &*(&*r as *const dyn Resource as *const T) }
         }))
     }
 
@@ -94,7 +94,7 @@ impl World {
             None => return Err(StarryError::ResourceNotFound(type_name::<T>()))
         };
         Ok(RwLockWriteGuard::map(cloned.write(), |r| {
-            unsafe { &mut *(&mut **r as *mut dyn Resource as *mut T) }
+            unsafe { &mut *(&mut *r as *mut dyn Resource as *mut T) }
         }))
     }
     

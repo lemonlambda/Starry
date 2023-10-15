@@ -10,7 +10,7 @@ struct TestComponent {
 impl Component for TestComponent {}
 
 fn test_system(world: &World) {
-    let test_comp = world.get_components_read::<TestComponent>().unwrap()[0].clone();
+    let test_comp = world.get_components::<TestComponent>()[0].clone();
     println!("{}", test_comp.x);
 }
 
