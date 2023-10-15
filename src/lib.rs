@@ -27,6 +27,11 @@ pub enum StarryError {
 }
 
 pub type SystemType = fn(world: &World);
+// Aliases to make the type signature make more sense
+pub type ResourceWriteGuard<'a, T> = MappedRwLockWriteGuard<'a, T>;
+pub type ResourceReadGuard<'a, T> = MappedRwLockReadGuard<'a, T>;
+pub type ComponentWriteGuard<'a, T> = MappedRwLockWriteGuard<'a, T>;
+pub type ComponentReadGuard<'a, T> = MappedRwLockReadGuard<'a, T>;
 
 pub struct World {
     pub components: Vec<(Arc<RwLock<Box<dyn Component>>>, TypeId)>,
