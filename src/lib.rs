@@ -14,7 +14,7 @@ use std::any::{TypeId, Any, type_name};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use parking_lot::{RwLock, RwLockReadGuard, MappedRwLockReadGuard};
+use parking_lot::{RwLock, RwLockReadGuard, MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLockWriteGuard};
 
 #[derive(Debug)]
 pub enum StarryError {
@@ -63,11 +63,19 @@ impl World {
         self
     }
 
-    pub fn get_resource_read<T: Resource + 'static>(&self) -> Result<MappedRwLockReadGuard<T>, StarryError> {
+    pub fn get_resource_read<T: Resource + 'static>(&self) -> Result<MappedRwLockReadGuard<'_, T>, StarryError> {
         let name = TypeId::of::<T>();
-        let cloned = self.resources.get(&name).expect(format!("{} Resource doesn't exist", type_name::<T>()).as_str()).clone();
+        let cloned = self.resources.get(&name).expect(format!("{} Resource doesn't exist", type_name::<T>()).as_str());
         Ok(RwLockReadGuard::map(cloned.read(), |r| {
             unsafe { &*(&**r as *const dyn Resource as *const T) }
+        }))
+    }
+
+    pub fn get_resource_write<T: Resource + 'static>(&self) -> Result<MappedRwLockWriteGuard<'_, T>, StarryError> {
+        let name = TypeId::of::<T>();
+        let cloned = self.resources.get(&name).expect(format!("{} Resource doesn't exist", type_name::<T>()).as_str());
+        Ok(RwLockWriteGuard::map(cloned.write(), |r| {
+            unsafe { &mut *(&mut **r as *mut dyn Resource as *mut T) }
         }))
     }
 
