@@ -169,13 +169,18 @@ impl World {
     }
 
     pub fn start(&mut self) -> &mut Self {
-        // let _ = self.systems.par_iter().map(|system| system(&self)).collect::<Vec<_>>();
+        let _ = self.starting_systems.par_iter().map(|system| system(&self)).collect::<Vec<_>>();
         self
     }
 
     pub fn run(&mut self) -> ! {
         loop {
-            // let _ = self.systems.par_iter().map(|system| system(&self)).collect::<Vec<_>>();
+        let mut numbers = self.systems.iter().map(|(i, _)| i).collect::<Vec<_>>();
+        numbers.sort();
+        
+        let _ = numbers.iter().map(|system_group| {
+            let _ = self.systems.get(system_group).unwrap().par_iter().map(|system| system(&self)).collect::<Vec<_>>();
+        }).collect::<Vec<_>>();
         }
     }
 }
