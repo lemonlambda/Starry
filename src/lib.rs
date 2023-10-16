@@ -1,22 +1,23 @@
 #![deny(rust_2018_idioms)]
 #![feature(type_name_of_val)]
+#![feature(thread_spawn_unchecked)]
 
 use component::Component;
+use once_cell::sync::Lazy;
 use resources::Resource;
-use thread_manager::ThreadManager;
 
 pub mod component;
 pub mod resources;
 pub mod systems;
-pub mod thread_manager;
 
-
-use std::any::{TypeId, type_name};
+use std::mem;
+use std::any::{TypeId, Any, type_name, type_name_of_val};
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use parking_lot::{RwLock, RwLockReadGuard, MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLockWriteGuard};
 use thiserror::Error;
+use rayon::prelude::*;
 
 #[derive(Error, Debug)]
 pub enum StarryError {
@@ -33,13 +34,16 @@ pub type ResourceReadGuard<'a, T> = MappedRwLockReadGuard<'a, T>;
 pub type ComponentWriteGuard<'a, T> = MappedRwLockWriteGuard<'a, T>;
 pub type ComponentReadGuard<'a, T> = MappedRwLockReadGuard<'a, T>;
 
+#[derive(Clone)]
 pub struct World {
     pub components: Vec<(Arc<RwLock<dyn Component>>, TypeId)>,
     pub systems: Vec<SystemType>,
     pub starting_systems: Vec<SystemType>,
     pub resources: HashMap<TypeId, Arc<RwLock<dyn Resource>>>,
-    pub thread_manager: ThreadManager
 }
+
+unsafe impl Send for World {}
+unsafe impl Sync for World {}
 
 impl World {
     pub fn new() -> Self {
@@ -48,7 +52,6 @@ impl World {
             systems: vec![],
             starting_systems: vec![],
             resources: HashMap::new(),
-            thread_manager: ThreadManager::new(),
         }
     }
 
@@ -155,24 +158,18 @@ impl World {
     }
 
     pub fn single_step(&mut self) -> &mut Self {
-        for system in &self.systems {
-            system(&self);
-        }
+        let _ = self.systems.par_iter().map(|system| system(&self)).collect::<Vec<_>>();
         self
     }
 
     pub fn start(&mut self) -> &mut Self {
-        for system in &self.starting_systems {
-            system(&self);
-        }
+        let _ = self.systems.par_iter().map(|system| system(&self)).collect::<Vec<_>>();
         self
     }
 
     pub fn run(&mut self) -> ! {
         loop {
-            for system in &self.systems {
-                system(&self);
-            }
+            let _ = self.systems.par_iter().map(|system| system(&self)).collect::<Vec<_>>();
         }
     }
 }
