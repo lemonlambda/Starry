@@ -127,6 +127,33 @@ impl World {
         Ok(comps)
     }
 
+    pub fn get_components<T: Component + 'static>(&self) -> Vec<ComponentReadGuard<'_, T>> {
+        self.try_get_components().unwrap()
+    }
+    
+    pub fn try_get_components_mut<T: Component + 'static>(&self) -> Result<Vec<ComponentWriteGuard<'_, T>>, StarryError> {
+        let id = TypeId::of::<T>();
+
+        let comps = self
+            .components
+            .iter()
+            .filter(|(_, t)| t == &id)
+            .map(|(v, _)| RwLockWriteGuard::map(v.write(), |r| {
+                unsafe { &mut *(r as *mut dyn Component as *mut T) }
+            }))
+            .collect::<Vec<MappedRwLockWriteGuard<'_, T>>>();
+
+        if comps.len() == 0 {
+            return Err(StarryError::ComponentNotFound(type_name::<T>()));
+        }
+
+        Ok(comps)
+    }
+
+    pub fn get_components_mut<T: Component + 'static>(&self) -> Vec<ComponentWriteGuard<'_, T>> {
+        self.try_get_components_mut().unwrap()
+    }
+
     pub fn single_step(&mut self) -> &mut Self {
         for system in &self.systems {
             system(&self);
