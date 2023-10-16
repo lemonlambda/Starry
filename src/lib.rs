@@ -3,7 +3,6 @@
 #![feature(thread_spawn_unchecked)]
 
 use component::Component;
-use once_cell::sync::Lazy;
 use resources::Resource;
 
 pub mod component;
