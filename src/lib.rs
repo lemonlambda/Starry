@@ -9,10 +9,10 @@ pub mod component;
 pub mod resources;
 pub mod systems;
 
-use std::mem;
-use std::any::{TypeId, Any, type_name, type_name_of_val};
+
+use std::any::{TypeId, type_name};
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc};
 
 use parking_lot::{RwLock, RwLockReadGuard, MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLockWriteGuard};
 use thiserror::Error;
