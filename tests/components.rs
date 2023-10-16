@@ -1,6 +1,6 @@
 use starry_ecs::{component::Component, World, resources::Resource};
 
-use std::io::{stdout, Write};
+
 
 #[derive(Clone, Debug)]
 struct TestComponent {
@@ -23,5 +23,5 @@ fn test_system(world: &World) {
 
 #[test]
 fn create_component() {
-    let world = World::new().add_component(TestComponent { x: -100 }).add_system(test_system).start().single_step();
+    let _world = World::new().add_component(TestComponent { x: -100 }).add_system(test_system).start().single_step();
 }

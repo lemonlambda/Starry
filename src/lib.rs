@@ -10,8 +10,8 @@ pub mod resources;
 pub mod systems;
 pub mod thread_manager;
 
-use std::mem;
-use std::any::{TypeId, Any, type_name, type_name_of_val};
+
+use std::any::{TypeId, type_name};
 use std::collections::HashMap;
 use std::sync::Arc;
 

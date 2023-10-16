@@ -1,8 +1,8 @@
-use std::cell::RefCell;
-use std::thread::Thread;
+
+
 use std::thread::Builder as ThreadBuilder;
 use std::sync::{Arc, Mutex};
-use std::sync::atomic::AtomicBool;
+
 use std::thread::available_parallelism;
 
 pub struct ThreadManager {
