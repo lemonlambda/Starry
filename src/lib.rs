@@ -1,6 +1,7 @@
 #![deny(rust_2018_idioms)]
 #![feature(type_name_of_val)]
 #![feature(thread_spawn_unchecked)]
+#![deny(missing_docs)]
 
 use component::Component;
 use resources::Resource;
