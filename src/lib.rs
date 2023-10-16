@@ -108,17 +108,23 @@ impl World {
         }
     }
 
-    pub fn get_components_read<T: Component + 'static>(&self) -> Result<Vec<ComponentReadGuard<'_, T>>, StarryError> {
-        let name = TypeId::of::<T>();
-        let comps = self.components.iter().filter(|(_, t)| t == &name).map(|(v, _)| v.clone()).collect::<Vec<Arc<RwLock<Box<dyn Component>>>>>();
+    pub fn try_get_components<T: Component + 'static>(&self) -> Result<Vec<ComponentReadGuard<'_, T>>, StarryError> {
+        let id = TypeId::of::<T>();
+
+        let comps = self
+            .components
+            .iter()
+            .filter(|(_, t)| t == &id)
+            .map(|(v, _)| RwLockReadGuard::map(v.read(), |r| {
+                unsafe { &*(r as *const dyn Component as *const T) }
+            }))
+            .collect::<Vec<MappedRwLockReadGuard<'_, T>>>();
+
         if comps.len() == 0 {
             return Err(StarryError::ComponentNotFound(type_name::<T>()));
         }
 
-        // TODO: Implement the rest of this
-        todo!();
-        
-        // Ok(concreted)
+        Ok(comps)
     }
 
     pub fn single_step(&mut self) -> &mut Self {
