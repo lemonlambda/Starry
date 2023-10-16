@@ -1,6 +1,4 @@
-use starry_ecs::{component::Component, World, resources::Resource};
-
-
+use starry_ecs::{component::Component, World, resources::Resource, systems::DefaultOrdering};
 
 #[derive(Clone, Debug)]
 struct TestComponent {
@@ -23,5 +21,5 @@ fn test_system(world: &World) {
 
 #[test]
 fn create_component() {
-    let _world = World::new().add_component(TestComponent { x: -100 }).add_system(test_system).start().single_step();
+    let _world = World::new().add_component(TestComponent { x: -100 }).add_system(DefaultOrdering::Run, test_system).start().single_step();
 }

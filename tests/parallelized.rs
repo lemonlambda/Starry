@@ -1,4 +1,5 @@
 use starry_ecs::World;
+use starry_ecs::systems::DefaultOrdering;
 
 use std::time::{SystemTime, Duration, UNIX_EPOCH};
 use std::thread::sleep;
@@ -25,5 +26,5 @@ pub fn system_2(_: &World) {
 
 #[test]
 pub fn test_parallization() {
-    let _world = World::new().add_system(system_1).add_system(system_2).single_step();
+    let _world = World::new().add_system(DefaultOrdering::Run, system_1).add_system(DefaultOrdering::Run, system_2).single_step();
 }

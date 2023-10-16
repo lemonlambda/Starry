@@ -1,5 +1,6 @@
 use starry_ecs::World;
 use starry_ecs::resources::Resource;
+use starry_ecs::systems::DefaultOrdering;
 
 #[derive(Debug)]
 pub struct TestResource {
@@ -28,5 +29,5 @@ pub fn test_resource(world: &World) {
 
 #[test]
 pub fn create_resource() {
-    let _world = World::new().add_system(test_resource).add_resource(TestResource { x: 100 }).add_resource(RunCounter { runs: 0 }).start().single_step().single_step();
+    let _world = World::new().add_system(DefaultOrdering::Run, test_resource).add_resource(TestResource { x: 100 }).add_resource(RunCounter { runs: 0 }).start().single_step().single_step();
 }

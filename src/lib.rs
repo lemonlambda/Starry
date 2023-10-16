@@ -4,6 +4,7 @@
 
 use component::Component;
 use resources::Resource;
+use systems::SystemOrdering;
 
 pub mod component;
 pub mod resources;
@@ -36,7 +37,7 @@ pub type ComponentReadGuard<'a, T> = MappedRwLockReadGuard<'a, T>;
 #[derive(Clone)]
 pub struct World {
     pub components: Vec<(Arc<RwLock<dyn Component>>, TypeId)>,
-    pub systems: Vec<SystemType>,
+    pub systems: HashMap<i32, Vec<SystemType>>,
     pub starting_systems: Vec<SystemType>,
     pub resources: HashMap<TypeId, Arc<RwLock<dyn Resource>>>,
 }
@@ -48,7 +49,7 @@ impl World {
     pub fn new() -> Self {
         Self {
             components: vec![],
-            systems: vec![],
+            systems: HashMap::new(),
             starting_systems: vec![],
             resources: HashMap::new(),
         }
@@ -59,8 +60,9 @@ impl World {
         self
     }
 
-    pub fn add_system(&mut self, system: SystemType) -> &mut Self {
-        self.systems.push(system);
+    pub fn add_system<S: SystemOrdering + Copy>(&mut self, system_ordering: S, system: SystemType) -> &mut Self {
+        self.systems.entry(system_ordering.into()).or_insert(vec![]);
+        self.systems.entry(system_ordering.into()).and_modify(|x| x.push(system));
         self
     }
 
@@ -157,18 +159,23 @@ impl World {
     }
 
     pub fn single_step(&mut self) -> &mut Self {
-        let _ = self.systems.par_iter().map(|system| system(&self)).collect::<Vec<_>>();
+        let mut numbers = self.systems.iter().map(|(i, _)| i).collect::<Vec<_>>();
+        numbers.sort();
+        
+        let _ = numbers.iter().map(|system_group| {
+            let _ = self.systems.get(system_group).unwrap().par_iter().map(|system| system(&self)).collect::<Vec<_>>();
+        }).collect::<Vec<_>>();
         self
     }
 
     pub fn start(&mut self) -> &mut Self {
-        let _ = self.systems.par_iter().map(|system| system(&self)).collect::<Vec<_>>();
+        // let _ = self.systems.par_iter().map(|system| system(&self)).collect::<Vec<_>>();
         self
     }
 
     pub fn run(&mut self) -> ! {
         loop {
-            let _ = self.systems.par_iter().map(|system| system(&self)).collect::<Vec<_>>();
+            // let _ = self.systems.par_iter().map(|system| system(&self)).collect::<Vec<_>>();
         }
     }
 }
